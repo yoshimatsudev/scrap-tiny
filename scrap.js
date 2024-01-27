@@ -9,6 +9,11 @@ puppeteer.use(StealthPlugin())
 
 console.log('starting nodejs script')
 
+let noActionInvoices = 0
+let cronHour = process.env.CRON_HOUR || "15"
+
+console.log(process.env.USERNAME, process.env.CRON_HOUR, process.env.API_URL, process.env.PASSWORD);
+
 async function getInvoices() {
     try {
         const browser = await puppeteer.launch();
@@ -52,8 +57,14 @@ async function getInvoices() {
 }
 
 async function sendInvoices(invoices) {
+
     for (const id of invoices) {
         console.log(id);
+        if (noActionInvoices > invoices.length / 2) {
+            noActionInvoces = 0
+            cronHour = (Number(cronHour) + 15).toString();
+            throw new Error('No actions to do on invoices, increasing cron timer +15')
+        }
         await fetch(`${process.env.API_URL}${id}`)
             .then((res) => {
                 if (res.ok) {
@@ -62,6 +73,7 @@ async function sendInvoices(invoices) {
 
                 if (res.status === 401) {
                     console.log('already processed')
+                    noActionInvoices++
                 }
 
                 if (res.status === 404) {
@@ -73,6 +85,7 @@ async function sendInvoices(invoices) {
                 throw new Error('Error on invoice ' + err)
             })
     }
+    noActionInvoices = 0
     console.log('finished sending invoices, waiting for routine')
 }
 
@@ -100,7 +113,7 @@ async function scrapRoutine() {
 async function main() {
     console.log('starting routine...')
     await scrapRoutine();
-    cron.schedule(`*/${CRON_HOUR} * * * *`, async () => {
+    cron.schedule(`*/${cronHour} * * * *`, async () => {
         await scrapRoutine();
     })
 
