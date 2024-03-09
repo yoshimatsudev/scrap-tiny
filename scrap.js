@@ -32,9 +32,9 @@ async function getInvoices() {
         await page.goto('https://erp.tiny.com.br/notas_fiscais#list');
 
         await page.waitForSelector('#sit-P');
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(2000);
         await page.$eval('#sit-P', el => el.click());
-        await page.waitForTimeout(5000)
+        // await page.waitForTimeout(5000)
 
 
         await page.waitForTimeout(1500);
@@ -100,7 +100,7 @@ async function scrapRoutine() {
 async function main() {
     console.log('starting routine...')
     await scrapRoutine();
-    cron.schedule(`*/${CRON_HOUR} * * * *`, async () => {
+    cron.schedule(`*/${process.env.CRON_HOUR} * * * *`, async () => {
         await scrapRoutine();
     })
 
