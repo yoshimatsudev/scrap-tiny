@@ -1,9 +1,6 @@
-// puppeteer-extra is a drop-in replacement for puppeteer,
-// it augments the installed puppeteer with plugin functionality
 const puppeteer = require('puppeteer-extra')
 const cron = require('node-cron')
 
-// add stealth plugin and use defaults (all evasion techniques)
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 puppeteer.use(StealthPlugin())
 
@@ -11,7 +8,7 @@ console.log('starting nodejs script')
 
 async function getInvoices() {
     try {
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
         const page = await browser.newPage();
 
         await page.goto('https://erp.tiny.com.br/')
@@ -99,8 +96,8 @@ async function scrapRoutine() {
 
 async function main() {
     console.log('starting routine...')
-    await scrapRoutine().catch(() => {console.log('scrapRoutineError')});
-    cron.schedule(`*/${process.env.CRON_HOUR} * * * *`, async () => {
+    await scrapRoutine();
+    cron.schedule(`${process.env.CRON}`, async () => {
         await scrapRoutine();
     })
 
