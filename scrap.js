@@ -37,7 +37,7 @@ async function getInvoices() {
         // await page.waitForTimeout(5000)
 
 
-        await page.waitForTimeout(1500);
+        await page.waitForSelector(`tr[idnota]`)
 
         const invoices = await page.$$eval('tr[idnota]', (el, atr) => {
             return el.map(element => element.getAttribute(atr))
