@@ -99,7 +99,7 @@ async function scrapRoutine() {
 
 async function main() {
     console.log('starting routine...')
-    await scrapRoutine();
+    await scrapRoutine().catch(() => {console.log('scrapRoutineError')});
     cron.schedule(`*/${process.env.CRON_HOUR} * * * *`, async () => {
         await scrapRoutine();
     })
@@ -109,20 +109,3 @@ async function main() {
 (async () => {
     await main();
 })();
-
-// cron.schedule('*/5 * * * *', () => {
-//     (async () => {
-//         let invoices = await getInvoices();
-//         console.log(invoices);
-//         if (invoices.length > 1) {
-//             try {
-//                 await sendInvoices(invoices)
-//             } catch (e) {
-//                 throw new Error(e.message)
-//             }
-//         }
-//         // process.exit(1);
-//     })().catch((e) => {
-//         console.log(e)
-//     });
-// })
