@@ -8,7 +8,7 @@ console.log('starting nodejs script')
 
 async function getInvoices() {
     try {
-        const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
+        const browser = await puppeteer.launch({ executablePath: '/usr/bin/google-chrome', headless: 'new', args: ['--no-sandbox'] });
         const page = await browser.newPage();
 
         await page.goto('https://erp.tiny.com.br/')
