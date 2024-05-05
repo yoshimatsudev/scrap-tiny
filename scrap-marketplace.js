@@ -15,16 +15,13 @@ async function getInvoices() {
     try {
         // const executablePath = await new Promise(resolve => locateChrome((arg) => resolve(arg))) || '';
 
-        const browser = await puppeteer.launch({
-            headless: 'new', // executablePath,
-            // ignoreDefaultArgs: ['--disable-extensions'],
-            // args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        });
+        const browser = await puppeteer.launch({ executablePath: '/usr/bin/google-chrome', headless: 'new', args: ['--no-sandbox'] });
         const page = await browser.newPage();
 
         await page.goto('https://erp.tiny.com.br/')
         await page.waitForTimeout(500)
         console.log('here')
+        console.log(process.env.USERNAME)
         await page.type('input[name=username]', process.env.USERNAME);
         await page.waitForTimeout(500)
         await page.type('input[name=password]', process.env.PASSWORD);
@@ -50,23 +47,18 @@ async function getInvoices() {
 
         await page.waitForTimeout(1500);
 
-        const storeEnum = {
-            'Shopee': 'shopee',
-            'Shein': 'shein',
-            'Mercado Livre': 'mercadolivre'
-        }
-
+       
         const tableData = await page.$$eval('tr[idnota]', (rows, atr) => {
             return rows.map(row => {
-                let storeData = row.querySelector('.badge-ecommerce > img')
+                let storeData = row.querySelector('.badge-ecommerce > img').getAttribute('alt')
                 let invoiceId = row.getAttribute(atr)
 
 
-                return { id: invoiceId }
+                return { id: invoiceId, store: storeData }
             });
         }, 'idnota');
 
-        console.log(tableData)
+        // console.log(tableData[0], storeEnum['Mercado Livre'])
 
         await browser.close()
         return tableData
@@ -88,13 +80,21 @@ async function getInvoices() {
 
 }
 
+const storeEnum = {
+    'Shopee': 'shopee',
+    'Shein': 'shein',
+    'Mercado Livre': 'mercado',
+    'Aliexpress': 'aliexpress',
+}
+
+
 async function sendInvoices(invoices) {
     for (const invoice of invoices) {
         // console.log(id);
-        await fetch(`${process.env.API_URL}${invoice.id}&store=${invoice.store}`)
+        await fetch(`${process.env.API_URL}${invoice.id}&store=${storeEnum[invoice.store]}`)
             .then((res) => {
                 if (res.ok) {
-                    console.log(res.status)
+                    console.log(`sent invoice ${invoice.id}, status: `, res.status)
                 }
 
                 if (res.status === 401) {
@@ -118,10 +118,10 @@ async function scrapRoutine() {
     for (let i = 0; i <= attempts; i++) {
         try {
             let invoices = await getInvoices();
-            // console.log(invoices);
+            console.log(invoices);
             if (invoices.length > 1) {
                 try {
-                    // await sendInvoices(invoices)
+                    await sendInvoices(invoices)
                     attempts = 0
                 } catch (e) {
                     console.log('error', e)
@@ -137,9 +137,9 @@ async function scrapRoutine() {
 async function main() {
     console.log('starting routine...')
     await scrapRoutine();
-    cron.schedule(`*/${process.env.CRON_HOUR} * * * *`, async () => {
-        await scrapRoutine();
-    })
+    // cron.schedule(`*/${process.env.CRON_HOUR} * * * *`, async () => {
+    //     await scrapRoutine();
+    // })
 
 }
 
