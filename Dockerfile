@@ -17,7 +17,9 @@ WORKDIR /home/app
 
 COPY package.json /home/app/package.json
 
-RUN npm install
+RUN npm i -g pnpm
+
+RUN pnpm install
 
 COPY . /home/app
 
@@ -30,4 +32,4 @@ RUN chmod -R 777 /home/app
 
 USER app
 
-ENTRYPOINT ["npm", "run", "start"]
+ENTRYPOINT ["pnpm", "run", "start"]
